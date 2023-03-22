@@ -8,8 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     container: qmkfm/qmk_cli
+    if: github.repository == 'vial-kb/vial-qmk'
 
     steps:
     - uses: actions/checkout@v2

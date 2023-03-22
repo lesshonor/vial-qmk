@@ -1,0 +1,47 @@
+name: validate-keymap
+
+on:
+  push:
+    branches:
+      - 'testbranch/**'
+  pull_request:
+    paths:
+      - 'keyboards/**'
+  workflow_dispatch:
+
+jobs:
+  build-keyboard:
+    runs-on: ubuntu-latest
+    container: qmkfm/qmk_cli
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Take ownership of the Vial repo dir
+      run: chown -R $(id -u):$(id -g) $PWD
+
+    - name: fix submodules
+      run: make git-submodule
+
+    - name: Verify Vial UID is unique
+      run: python3 util/ci_vial_verify_uid.py
+
+    - name: Determine affected keyboards
+      id: file_changes
+      uses: tj-actions/changed-files@v35
+
+    - name: Compile affected keyboards
+      shell: 'bash {0}'
+      run: |
+        QMK_CHANGES=$(echo -e '${{ steps.file_changes.outputs.all_changed_files}}' | sed 's/ /\n/g')
+        QMK_KEYBOARDS=$(qmk list-keyboards)
+        for KB in ${QMK_KEYBOARDS}; do
+          KEYBOARD_CHANGES=$(echo ${QMK_CHANGES} | grep -E '^(keyboards/'${KB}'/)')
+          if [[ -z ${KEYBOARD_CHANGES} ]]; then
+            # skip as no changes for this keyboard
+            continue
+          fi
+          make ${KB}:vial -j $(nproc) && make ${KB}:default -j $(nproc)
+        done
