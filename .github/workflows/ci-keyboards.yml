@@ -2,8 +2,8 @@ name: validate-keymap
 
 on:
   push:
-    branches:
-      - 'testbranch/**'
+    branches-ignore:
+      - 'vial'
   pull_request:
     paths:
       - 'keyboards/**'
