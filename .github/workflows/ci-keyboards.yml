@@ -1,16 +1,17 @@
-name: validate-keymap
+# The vast majority of user submissions are just new keymaps/keyboards.
+# Take additional care to validate these.
+name: validate-user-submission
 
 on:
   push:
-    branches-ignore:
-      - 'vial'
+    paths:
+      - 'keyboards/**'
   pull_request:
     paths:
       - 'keyboards/**'
-  workflow_dispatch:
 
 jobs:
-  build-keyboard:
+  validate-keyboard:
     runs-on: ubuntu-latest
     container: qmkfm/qmk_cli
 
@@ -22,15 +23,17 @@ jobs:
     - name: Take ownership of the Vial repo dir
       run: chown -R $(id -u):$(id -g) $PWD
 
-    - name: fix submodules
+    - name: Fix submodules
       run: make git-submodule
 
     - name: Verify Vial UID is unique
       run: python3 util/ci_vial_verify_uid.py
 
-    - name: Determine affected keyboards
+    - name: Determine affected keyboards/keymaps
       id: file_changes
       uses: tj-actions/changed-files@v35
+      with:
+        files: keyboards/**
 
     - name: Compile affected keyboards
       shell: 'bash {0}'
