@@ -1,6 +1,6 @@
 # The vast majority of user submissions are just new keymaps/keyboards.
 # Take additional care to validate these.
-name: validate-user-submission
+name: 'Validate Keymap Submission'
 
 on:
   push:
@@ -9,6 +9,10 @@ on:
   pull_request:
     paths:
       - 'keyboards/**'
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   validate-keyboard:
@@ -34,11 +38,12 @@ jobs:
       uses: tj-actions/changed-files@v35
       with:
         files: keyboards/**
+        separator: "|"
 
     - name: Compile affected keyboards
       shell: 'bash {0}'
       run: |
-        QMK_CHANGES=$(echo -e '${{ steps.file_changes.outputs.all_changed_files}}' | sed 's/ /\n/g')
+        QMK_CHANGES=$(echo -e '${{ steps.file_changes.outputs.all_changed_files}}' | sed 's/|/\n/g')
         QMK_KEYBOARDS=$(qmk list-keyboards)
         for KB in ${QMK_KEYBOARDS}; do
           KEYBOARD_CHANGES=$(echo ${QMK_CHANGES} | grep -E '^(keyboards/'${KB}'/)')
