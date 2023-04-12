@@ -40,16 +40,11 @@ jobs:
         files: keyboards/**
         separator: "|"
 
-    - name: Compile affected keyboards
+    - name: Check added files
       shell: 'bash {0}'
       run: |
-        QMK_CHANGES=$(echo -e '${{ steps.file_changes.outputs.all_changed_files}}' | sed 's/|/\n/g')
-        QMK_KEYBOARDS=$(qmk list-keyboards)
-        for KB in ${QMK_KEYBOARDS}; do
-          KEYBOARD_CHANGES=$(echo ${QMK_CHANGES} | grep -E '^(keyboards/'${KB}'/)')
-          if [[ -z ${KEYBOARD_CHANGES} ]]; then
-            # skip as no changes for this keyboard
-            continue
-          fi
-          make ${KB}:vial -j $(nproc) && make ${KB}:default -j $(nproc)
-        done
+        IFS=$'|' read -a NEW_FILES <<< "${{ steps.file_changes.outputs.added_files }}"
+           for file in "${NEW_FILES[@]}"; do
+             echo $file
+           done
+           unset IFS
