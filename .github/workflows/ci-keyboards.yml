@@ -40,7 +40,7 @@ jobs:
         files: keyboards/**
         separator: "|"
 
-    - name: Check added files for undesirable objects
+    - name: Check added files for undesirable objects (TBD)
       shell: 'bash {0}'
       run: |
         IFS=$'|' read -a NEW_FILES <<< "${{ steps.file_changes.outputs.added_files }}"
@@ -55,7 +55,7 @@ jobs:
         QMK_CHANGES=$(echo -e '${{ steps.file_changes.outputs.all_changed_files}}' | sed 's/|/\n/g')
         QMK_KEYBOARDS=$(qmk list-keyboards)
         for KB in ${QMK_KEYBOARDS}; do
-          KEYBOARD_CHANGES=$(echo ${QMK_CHANGES} | grep -E '^(keyboards/'${KB}'/)')
+          KEYBOARD_CHANGES=$(echo "${QMK_CHANGES}" | grep -E '^(keyboards/'${KB}'/)')
           if [[ -z ${KEYBOARD_CHANGES} ]]; then
             # skip as no changes for this keyboard
             continue
