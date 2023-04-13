@@ -40,11 +40,20 @@ jobs:
         files: keyboards/**
         separator: "|"
 
-    - name: Check added files
+    - name: Check added files for undesirable objects
       shell: 'bash {0}'
       run: |
         IFS=$'|' read -a NEW_FILES <<< "${{ steps.file_changes.outputs.added_files }}"
            for file in "${NEW_FILES[@]}"; do
+             echo $file
+           done
+           unset IFS
+
+    - name: Compile affected keyboards
+      shell: 'bash {0}'
+      run: |
+        IFS=$'|' read -a CHANGED_FILES <<< "${{ steps.file_changes.outputs.all_changed_files }}"
+           for file in "${CHANGED_FILES[@]}"; do
              echo $file
            done
            unset IFS
