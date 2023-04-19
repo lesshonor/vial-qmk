@@ -60,7 +60,7 @@ jobs:
             # skip as no changes for this keyboard
             continue
           fi
-          make ${KB}:vial -j $(nproc) && make ${KB}:default -j $(nproc)
+          make ${KB}:default -j $(nproc) && make ${KB}:vial -j $(nproc)
         done
 
         #    - name: Compile affected keyboards
