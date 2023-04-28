@@ -33,11 +33,11 @@ jobs:
     - name: Verify Vial UID is unique
       run: python3 util/ci_vial_verify_uid.py
 
-    - name: Determine affected keyboards/keymaps
+    - name: Determine affected files
       id: file_changes
       uses: tj-actions/changed-files@v35
       with:
-        files: keyboards/**
+        #files: keyboards/**
         separator: "|"
 
     - name: Check added files for undesirable objects (TBD)
@@ -52,6 +52,8 @@ jobs:
     - name: Compile affected keyboards
       shell: 'bash {0}'
       run: |
+        exit_code=0
+
         QMK_CHANGES=$(echo -e '${{ steps.file_changes.outputs.all_changed_files}}' | sed 's/|/\n/g')
         QMK_KEYBOARDS=$(qmk list-keyboards)
         for KB in ${QMK_KEYBOARDS}; do
@@ -60,8 +62,15 @@ jobs:
             # skip as no changes for this keyboard
             continue
           fi
-          make ${KB}:default -j $(nproc) && make ${KB}:vial -j $(nproc)
+
+          #TODO: be smarter about keymap detection
+          for KEYMAP in default vial; do
+            make ${KB}:${KEYMAP} -j $(nproc) -e SILENT=true
+            exit_code=$(( $exit_code | $? ))
+          done
         done
+
+        test $exit_code -eq 0
 
         #    - name: Compile affected keyboards
         #      shell: 'bash {0}'
