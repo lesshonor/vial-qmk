@@ -24,8 +24,8 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Take ownership of the Vial repo dir
-      run: chown -R $(id -u):$(id -g) $PWD
+    - name: Fix safe directory problem
+      run: git config --global --add safe.directory $(pwd)
 
     - name: Fix submodules
       run: make git-submodule
@@ -40,16 +40,19 @@ jobs:
         #files: keyboards/**
         separator: "|"
 
-    - name: Check added files for undesirable objects (TBD)
+    - name: Check added files for undesirable objects
       shell: 'bash {0}'
       run: |
         IFS=$'|' read -a NEW_FILES <<< "${{ steps.file_changes.outputs.added_files }}"
-           for file in "${NEW_FILES[@]}"; do
-             echo $file
+           for newfile in "${NEW_FILES[@]}"; do
+             # Not necessarily rejection-worthy
+             file -b "${newfile}" | grep -qv "text" && echo "::warning file={file}::non-text file detected"
+             # ...shout out to hex files
+             [[ "${newfile##*.}" == 'hex' ]] && echo "::warning file={file}::non-text file (hex) detected"
            done
            unset IFS
 
-    - name: Compile affected keyboards
+    - name: Compile and check affected keyboards
       shell: 'bash {0}'
       run: |
         exit_code=0
@@ -65,18 +68,14 @@ jobs:
 
           #TODO: be smarter about keymap detection
           for KEYMAP in default vial; do
+
+            # Lint failures now will become compilation failures after a few upstream changes, so at least flag to try and get the submitter to fix
+            qmk lint -kb ${KB} -km ${KEYMAP} || echo "::notice title=${KB} ${KEYMAP} Lint Check Failed::Please run qmk lint -kb ${KB} -km ${KEYMAP}"
+
+            # Ensure keymaps build
             make ${KB}:${KEYMAP} -j $(nproc) -e SILENT=true
             exit_code=$(( $exit_code | $? ))
           done
         done
 
         test $exit_code -eq 0
-
-        #    - name: Compile affected keyboards
-        #      shell: 'bash {0}'
-        #      run: |
-        #        IFS=$'|' read -a CHANGED_FILES <<< "${{ steps.file_changes.outputs.all_changed_files }}"
-        #           for file in "${CHANGED_FILES[@]}"; do
-        #             echo $file
-        #           done
-        #           unset IFS
