@@ -46,7 +46,8 @@ jobs:
         IFS=$'|' read -a NEW_FILES <<< "${{ steps.file_changes.outputs.added_files }}"
            for newfile in "${NEW_FILES[@]}"; do
              # Not necessarily rejection-worthy
-             file -b "${newfile}" | grep -qv "text" && echo "::warning file={file}::non-text file detected"
+             #file -b "${newfile}" | grep -qv "text" && echo "::warning file={file}::non-text file detected"
+             git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 --numstat ${{ env.GITHUB_REF }} -- "${newfile}" | cut -f1 | grep -q '-' && echo "::warning file=${newfile}::non-text file detected"
              # ...shout out to hex files
              [[ "${newfile##*.}" == 'hex' ]] && echo "::warning file={file}::non-text file (hex) detected"
            done
