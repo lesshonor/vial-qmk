@@ -1,0 +1,231 @@
+name: Pull Request Validation
+
+# Try to avoid 700 overlapping invocations from individually-accepted PR suggestions
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+  # TODO: Remove push after testing is complete
+on: [ pull_request, push ]
+
+permissions: {}
+
+jobs:
+  # Vial UID has zero dependencies
+  check-uid:
+    name: Check Vial UIDs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: (actions) Checkout Vial repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify Vial UID is unique per-keyboard
+        run: python3 util/ci_vial_verify_uid.py
+
+  check-folders:
+    name: Check Folders
+    runs-on: ubuntu-latest
+    container: ghcr.io/qmk/qmk_cli
+    outputs:
+      keyboards_only: ${{ steps.analyze_folders.outputs.keyboards_only }}
+      modified_keyboards: ${{ steps.analyze_folders.outputs.modified_keyboards }}
+      removed_keyboards: ${{ steps.analyze_folders.outputs.removed_keyboards }}
+
+    steps:
+      - name: (action) Checkout Vial repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory $(pwd)
+
+      - id: folder_changes
+        name: (action) Get Changed Folders
+        uses: tj-actions/changed-files@v36
+        with:
+          separator: "|"
+          dir_names: true
+          dir_names_exclude_current_dir: true
+
+      - id: analyze_folders
+        name: Analyze changes
+        shell: bash
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+
+          # TODO: Take special action if files outside of the keyboard folder are modified.
+          if echo "${{ steps.folder_changes.outputs.all_modified_files }}" | grep -Eqv '(^keyboards|\|keyboards)/';
+          then
+            echo "keyboards_only=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "keyboards_only=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          # We want to ensure these build.
+          # TODO: If there are no keyboards modified, the multiline output breaks...
+          echo "modified_keyboards<<${EOF}" >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+          for KB in $(qmk list-keyboards); do
+            echo "${{ steps.folder_changes.outputs.all_changed_files }}" | grep -Eq "(^keyboards|\|keyboards)/${KB}(/|$)" && echo "${KB}" >> "$GITHUB_OUTPUT"
+          done
+          echo "$EOF" >> "$GITHUB_OUTPUT"
+
+          # TODO: Check against upstream?
+          REMOVED_FOLDERS=$(comm -23 \
+            <(echo "${{ steps.folder_changes.outputs.deleted_files }}" | tr '|' '\n' | sort -u) \
+            <(echo "${{ steps.folder_changes.outputs.all_changed_files }}" | tr '|' '\n' | sort -u))
+          echo "removed_keyboards<<${EOF}" >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+          echo "${REMOVED_FOLDERS}" | grep '^keyboards/' | grep -v '/keymaps' | sed 's@keyboards/@@' >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> "$GITHUB_OUTPUT"
+
+  check-files:
+    name: Check Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: (action) Checkout Vial repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory $(pwd)
+
+      - id: file_changes
+        name: (action) Get Changed Files
+        uses: tj-actions/changed-files@v36
+        with:
+          separator: '|'
+
+      - id: analyze_files
+        name: Analyze changes
+        shell: bash
+        run: |
+          binary_changes=0
+
+          echo "::group::Files of concern"
+          while IFS=$'\n' read -r newfile; do
+            [[ "${newfile%*/}" == lib ]] && binary_changes=1 && continue
+            [[ "${newfile##*.}" == hex ]] && binary_changes=1 && echo "::warning file=${newfile}::${newfile} detected as hex." && continue
+            git diff 4b825dc642cb6eb9a060e54bf8d69288fbee4904 --numstat $GITHUB_SHA -- "${newfile}" | cut -f1 | grep -q "-" && binary_changes=1 && echo "::warning file=${newfile}::${newfile} detected as binary."
+          done < <(echo "${{ steps.file_changes.outputs.all_modified_files}}" | tr '|' '\n' )
+          echo "::endgroup::"
+
+          echo "binary_changes=$binary_changes" >> "$GITHUB_OUTPUT"
+
+      - id: admin_check
+        name: (action) Get permissions
+        if: ${{ steps.analyze_files.outputs.binary_changes == true }}
+        uses: actions-cool/check-user-permission@a0668c9aec87f3875fc56170b6452a453e9dd819 # v2.2.0
+        with:
+          username: ${{ github.triggering_actor }}
+          require: admin
+
+      - id: auto-fail
+        name: Verify permission to modify binary files
+        if: ${{ steps.admin_check.outcome == 'success' && ! steps.admin_check.outputs.require-result }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.setFailed('Submodule changes and/or binary file changes disallowed.')
+
+          #  upstream_check:
+          #    needs: check_folders
+          #    runs-on: ubuntu-latest
+          #    container: ghcr.io/qmk/qmk_cli
+          #
+          #    steps:
+          #    - uses: actions/checkout@v3
+          #      with:
+          #        fetch-depth: 1
+          #        path: vial-qmk
+          #
+          #    - uses: actions/checkout@v3
+          #      with:
+          #        repository: qmk/qmk_firmware
+          #        fetch-depth: 1
+          #        path: qmk_firmware
+
+  lint:
+    name: Lint
+    if: ${{ needs.check-folders.outputs.modified_keyboards != '' }}
+    needs: check-folders
+    strategy:
+      fail-fast: false
+    env:
+      KEYBOARDS: ${{ needs.check-folders.outputs.modified_keyboards }}
+
+    runs-on: ubuntu-latest
+    container: ghcr.io/qmk/qmk_cli
+
+    steps:
+      - name: (action) Get Vial repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+        # TODO: more intelligent keymap handling
+      - name: QMK Lint
+        shell: bash
+        run: |
+          exit_code=0
+          while IFS=$'\n' read -r KB; do
+            qmk lint -kb "${KB}" --strict || exit_code=1
+            qmk lint -kb "${KB}" -km default --strict || exit_code=1
+            qmk lint -kb "${KB}" -km vial --strict || exit_code=1
+          done < <(echo "${KEYBOARDS}")
+
+          exit $exit_code
+
+          #      - name: Vial Lint
+          #        shell: bash
+          #        run: |
+          #          while IFS=$'\n' read -r KB; do
+          #            qmk info -f json -kb "${KB}" -km vial
+          #          done < <(echo "${{ needs.check-folders.outputs.modified_keyboards }}")
+
+  build:
+    name: Build
+    if: ${{ needs.check-folders.outputs.modified_keyboards != '' }}
+    needs: check-folders
+    strategy:
+      fail-fast: false
+    env:
+      KEYBOARDS: ${{ needs.check-folders.outputs.modified_keyboards }}
+
+    runs-on: ubuntu-latest
+    container: ghcr.io/qmk/qmk_cli
+
+    steps:
+      - name: (action) Get Vial repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+        # TODO: more intelligent keymap handling
+      - name: Compile Vial keymaps
+        shell: bash
+        run: |
+          exit_code=0
+          git config --global --add safe.directory $(pwd)
+
+          while IFS=$'\n' read -r KB; do
+            qmk compile -kb "${KB}" -km default -j $(nproc) -e SILENT=true || exit_code=1
+            qmk compile -kb "${KB}" -km vial -j $(nproc) -e SILENT=true || exit_code=1
+          done < <(echo "${KEYBOARDS}")
+
+          exit $exit_code
+
+          #build_targets="$(comm -12 <(echo "${KEYBOARDS}" | sed 's/$/:vial/') <(qmk find -km vial))"
+
+          #qmk mass-compile -j $(nproc) "${build_targets}"
+          #qmk mass-compile -j $(nproc) $(echo "${build_targets}" | sed 's/:vial$/:default/')
