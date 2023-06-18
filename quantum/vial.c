@@ -22,8 +22,6 @@
 #include "quantum.h"
 #include "vial_generated_keyboard_definition.h"
 
-#include "vial_ensure_keycode.h"
-
 #define VIAL_UNLOCK_COUNTER_MAX 50
 
 #ifdef VIAL_INSECURE
