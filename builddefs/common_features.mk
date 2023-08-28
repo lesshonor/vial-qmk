@@ -635,13 +635,12 @@ ifeq ($(strip $(VIAL_ENABLE)), yes)
     COMBO_ENABLE ?= yes
     KEY_OVERRIDE_ENABLE ?= yes
     SRC += $(QUANTUM_DIR)/vial.c
-    EXTRAINCDIRS += $(KEYMAP_OUTPUT)
     OPT_DEFS += -DVIAL_ENABLE -DNO_DEBUG -DSERIAL_NUMBER=\"vial:f64c2b3c\"
 
-$(QUANTUM_DIR)/vial.c: $(KEYMAP_OUTPUT)/vial_generated_keyboard_definition.h
+$(QUANTUM_DIR)/vial.c: $(INTERMEDIATE_OUTPUT)/src/vial_generated_keyboard_definition.h
 
-$(KEYMAP_OUTPUT)/vial_generated_keyboard_definition.h: $(KEYMAP_PATH)/vial.json
-	python3 util/vial_generate_definition.py $(KEYMAP_PATH)/vial.json $(KEYMAP_OUTPUT)/vial_generated_keyboard_definition.h
+$(INTERMEDIATE_OUTPUT)/src/vial_generated_keyboard_definition.h: $(KEYMAP_PATH)/vial.json
+	python3 util/vial_generate_definition.py $(KEYMAP_PATH)/vial.json $(INTERMEDIATE_OUTPUT)/src/vial_generated_keyboard_definition.h
 endif
 
 ifeq ($(strip $(VIAL_INSECURE)), yes)

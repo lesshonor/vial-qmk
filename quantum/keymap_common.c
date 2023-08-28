@@ -25,6 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "keycode_config.h"
 #include "quantum_keycodes.h"
 
+#ifdef VIAL_ENABLE
+#    include "vial.h"
+#endif
+
 #ifdef ENCODER_MAP_ENABLE
 #    include "encoder.h"
 #endif

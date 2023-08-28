@@ -26,6 +26,10 @@
 #include "action_tapping.h"
 #include "action_util.h"
 
+#ifdef VIAL_ENABLE
+#include "vial.h" // VIAL_COMBO_ENABLE will not be set in time without this include
+#endif
+
 #ifdef VIAL_COMBO_ENABLE
 #include "dynamic_keymap.h"
 /* dynamic combos are stored entirely in ram */
