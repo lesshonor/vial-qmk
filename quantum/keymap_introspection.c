@@ -74,7 +74,7 @@ __attribute__((weak)) uint16_t keycode_at_encodermap_location(uint8_t layer_num,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Combos
 
-#if defined(COMBO_ENABLE)
+#if defined(COMBO_ENABLE) && !defined(VIAL_COMBO_ENABLE)
 
 uint16_t combo_count_raw(void) {
     return sizeof(key_combos) / sizeof(combo_t);
