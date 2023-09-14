@@ -17,12 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#define AUDIO_PIN B5
-#define AUDIO_PWM_DRIVER PWMD1
-#define AUDIO_PWM_CHANNEL 1
-#define AUDIO_STATE_TIMER GPTD4
-
 #define VIAL_KEYBOARD_UID {0x98, 0xFE, 0x0B, 0x88, 0x0A, 0x16, 0x95, 0xD0}
 
 #define VIAL_UNLOCK_COMBO_ROWS { 0, 5 }
 #define VIAL_UNLOCK_COMBO_COLS { 0, 5 }
+
+#define AUDIO_CLICKY
+// Board runs too fast to hear the startup song otherwise.
+#define AUDIO_INIT_DELAY
