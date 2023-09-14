@@ -9,7 +9,7 @@
         {"name": "Touch Tap Off", "title": "Turn Off Touch Tap", "shortName": "T_OFF"},
         {"name": "Touch Tap Toggle", "title": "Toggle Touch Tap", "shortName": "T_TOG"}
     ],
-    "lighting": ["qmk_rgblight"],
+    "lighting": "qmk_rgblight",
     "matrix": {
         "rows": 9,
         "cols": 6
