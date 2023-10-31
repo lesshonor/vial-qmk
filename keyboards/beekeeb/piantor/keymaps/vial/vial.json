@@ -1,8 +1,6 @@
 {
     "name": "piantor",
     "lighting": "none",
-    "vendorId": "0xBEEB",
-    "productId": "0x0001",
     "matrix": {
         "rows": 8,
         "cols": 6
