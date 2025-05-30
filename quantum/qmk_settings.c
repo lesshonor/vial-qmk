@@ -70,6 +70,7 @@ static const qmk_settings_proto_t protos[] PROGMEM = {
    DECLARE_STATIC_BITSETTING(23, tapping_v2, QS_tapping_hold_on_other_key_press_bit),
    DECLARE_STATIC_BITSETTING(24, tapping_v2, QS_tapping_retro_tapping_bit),
    DECLARE_STATIC_SETTING(25, quick_tap_term),
+   DECLARE_STATIC_BITSETTING(26, tapping_v2, QS_tapping_chordal_hold_bit),
 };
 
 static void eeprom_settings_load(void) {
@@ -327,4 +328,11 @@ bool get_auto_shift_repeat(uint16_t keycode, keyrecord_t *record) {
 
 bool get_auto_shift_no_auto_repeat(uint16_t keycode, keyrecord_t *record) {
     return QS_auto_shift_no_auto_repeat;
+}
+
+bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t* tap_hold_record,
+                      uint16_t other_keycode, keyrecord_t* other_record) {
+    if (QS_tapping_chordal_hold)
+        return get_chordal_hold_default(tap_hold_record, other_record);
+    return true;
 }

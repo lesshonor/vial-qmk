@@ -161,6 +161,8 @@ extern qmk_settings_t QS;
 #define QS_tapping_hold_on_other_key_press (QS.tapping_v2 & (1 << QS_tapping_hold_on_other_key_press_bit))
 #define QS_tapping_retro_tapping_bit 2
 #define QS_tapping_retro_tapping (QS.tapping_v2 & (1 << QS_tapping_retro_tapping_bit))
+#define QS_tapping_chordal_hold_bit 3
+#define QS_tapping_chordal_hold (QS.tapping_v2 & (1 << QS_tapping_chordal_hold_bit))
 
 /* Grave escape */
 #define QS_grave_esc_alt_override (QS.grave_esc_override & 1)
