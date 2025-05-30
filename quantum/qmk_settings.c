@@ -12,7 +12,9 @@
 #include "keycode_config.h"
 
 static int eeprom_settings_get(const qmk_settings_proto_t *proto, void *setting, size_t maxsz);
+static int eeprom_settings_getbit(const qmk_settings_proto_t *proto, void *setting, size_t maxsz);
 static int eeprom_settings_set(const qmk_settings_proto_t *proto, const void *setting, size_t maxsz);
+static int eeprom_settings_setbit(const qmk_settings_proto_t *proto, const void *setting, size_t maxsz);
 static int magic_settings_get(const qmk_settings_proto_t *proto, void *setting, size_t maxsz);
 static int magic_settings_set(const qmk_settings_proto_t *proto, const void *setting, size_t maxsz);
 
@@ -22,6 +24,7 @@ qmk_settings_t QS;
 #define DECLARE_SETTING(id, _get, _set) DECLARE_SETTING_NOTIFY(id, _get, _set, NULL)
 #define DECLARE_STATIC_SETTING_NOTIFY(id, field, notify_)  { .qsid=id, .ptr=&QS.field, .sz=sizeof(QS.field), .get=eeprom_settings_get, .set=eeprom_settings_set, .notify=notify_ }
 #define DECLARE_STATIC_SETTING(id, field) DECLARE_STATIC_SETTING_NOTIFY(id, field, NULL)
+#define DECLARE_STATIC_BITSETTING(id, field, bit_) { .qsid=id, .ptr=&QS.field, .sz=sizeof(QS.field), .bit=bit_, .get=eeprom_settings_getbit, .set=eeprom_settings_setbit }
 
 static void auto_shift_timeout_apply(void) {
     set_autoshift_timeout(QS.auto_shift_timeout);
@@ -48,7 +51,6 @@ static const qmk_settings_proto_t protos[] PROGMEM = {
    DECLARE_STATIC_SETTING(5, osk_tap_toggle),
    DECLARE_STATIC_SETTING(6, osk_timeout),
    DECLARE_STATIC_SETTING(7, tapping_term),
-   DECLARE_STATIC_SETTING(8, tapping),
 #if defined(MOUSEKEY_ENABLE) && !defined(MK_3_SPEED)
    DECLARE_STATIC_SETTING_NOTIFY(9, mousekey_delay, mousekey_apply),
    DECLARE_STATIC_SETTING_NOTIFY(10, mousekey_interval, mousekey_apply),
@@ -64,6 +66,10 @@ static const qmk_settings_proto_t protos[] PROGMEM = {
    DECLARE_STATIC_SETTING(19, tap_hold_caps_delay),
    DECLARE_STATIC_SETTING(20, tapping_toggle),
    DECLARE_SETTING(21, magic_settings_get, magic_settings_set),
+   DECLARE_STATIC_BITSETTING(22, tapping_v2, QS_tapping_permissive_hold_bit),
+   DECLARE_STATIC_BITSETTING(23, tapping_v2, QS_tapping_hold_on_other_key_press_bit),
+   DECLARE_STATIC_BITSETTING(24, tapping_v2, QS_tapping_retro_tapping_bit),
+   DECLARE_STATIC_SETTING(25, quick_tap_term),
 };
 
 static void eeprom_settings_load(void) {
@@ -85,20 +91,39 @@ static void eeprom_settings_save(void) {
 }
 
 static int eeprom_settings_get(const qmk_settings_proto_t *proto, void *setting, size_t maxsz) {
-    uint16_t sz = pgm_read_word(&proto->sz);
+    uint8_t sz = pgm_read_byte(&proto->sz);
     if (sz > maxsz)
         return -1;
     memcpy(setting, pgm_read_ptr(&proto->ptr), sz);
     return 0;
 }
 
+static int eeprom_settings_getbit(const qmk_settings_proto_t *proto, void *setting, size_t maxsz) {
+    uint8_t bit = pgm_read_byte(&proto->bit);
+    uint32_t encoded = 0;
+    if (maxsz < 1 || eeprom_settings_get(proto, &encoded, sizeof(encoded)) < 0)
+        return -1;
+    *(uint8_t*)setting = !!(encoded & (1 << bit));
+    return 0;
+}
+
 static int eeprom_settings_set(const qmk_settings_proto_t *proto, const void *setting, size_t maxsz) {
-    uint16_t sz = pgm_read_word(&proto->sz);
-    if (pgm_read_word(&proto->sz) > maxsz)
+    uint8_t sz = pgm_read_byte(&proto->sz);
+    if (sz > maxsz)
         return -1;
     memcpy(pgm_read_ptr(&proto->ptr), setting, sz);
     eeprom_settings_save();
     return 0;
+}
+
+static int eeprom_settings_setbit(const qmk_settings_proto_t *proto, const void *setting, size_t maxsz) {
+    uint8_t bit = pgm_read_byte(&proto->bit);
+    uint32_t encoded = 0;
+    if (maxsz < 1 || eeprom_settings_get(proto, &encoded, sizeof(encoded)) < 0)
+        return -1;
+    encoded &= ~(1 << bit);
+    encoded |= (((*(uint8_t*)setting) & 1) << bit);
+    return eeprom_settings_set(proto, &encoded, sizeof(encoded));
 }
 
 static int magic_settings_get(const qmk_settings_proto_t *proto, void *setting, size_t maxsz) {
@@ -181,7 +206,8 @@ void qmk_settings_reset(void) {
 
     QS.combo_term = COMBO_TERM;
     QS.tapping_term = TAPPING_TERM;
-    QS.tapping = 0;
+    QS.tapping_v2 = 0;
+    QS.quick_tap_term = TAPPING_TERM;
     QS.tap_code_delay = TAP_CODE_DELAY;
     QS.tap_hold_caps_delay = TAP_HOLD_CAPS_DELAY;
     QS.tapping_toggle = TAPPING_TOGGLE;
@@ -261,23 +287,19 @@ uint16_t qs_get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 }
 
 bool get_permissive_hold(uint16_t keycode, keyrecord_t *record) {
-    return QS.tapping & 1;
+    return QS_tapping_permissive_hold;
 }
 
 bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
-    return !(QS.tapping & 2);
+    return QS_tapping_hold_on_other_key_press;
 }
 
 uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
-    if (QS.tapping & 4) {
-        return 0;
-    } else {
-        return QS.tapping_term;
-    }
+    return QS.quick_tap_term;
 }
 
 bool get_retro_tapping(uint16_t keycode, keyrecord_t *record) {
-    return QS.tapping & 8;
+    return QS_tapping_retro_tapping;
 }
 
 uint16_t get_combo_term(uint16_t index, combo_t *combo) {
