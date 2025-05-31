@@ -1,7 +1,4 @@
 {
-    "name": "Clunker",
-    "productId": "0x1711",
-    "vendorId": "0x6D77",
     "lighting": "none",
     "matrix": { "rows": 7, "cols": 8 },
     "layouts": {
