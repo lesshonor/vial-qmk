@@ -20,6 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define VIAL_UNLOCK_COMBO_COLS { 0, 3 }
 
 /* Space-saving measures */
-#define LAYER_STATE_8BIT
+#define NO_ACTION_ONESHOT
 #undef LOCKING_SUPPORT_ENABLE
 #undef LOCKING_RESYNC_ENABLE
