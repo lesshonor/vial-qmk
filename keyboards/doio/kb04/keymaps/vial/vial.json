@@ -1,9 +1,6 @@
 {
-    "name": "KB04-01",
-    "vendorId": "0xD010",
-    "productId": "0x0401",
-    "lighting": "qmk_rgblight",
-    "matrix": { "rows": 1, "cols": 8 },
+    "lighting": "vialrgb",
+    "matrix": { "rows": 1, "cols": 5 },
     "layouts": {
         "labels": [ "Inverted" ],
         "keymap": [
