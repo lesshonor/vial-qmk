@@ -1,8 +1,4 @@
 {
-    "name": "bm40v2",
-    "vendorId": "0x4B50",
-    "productId": "0x1141",
-    "lighting": ["qmk_lighting"],
     "matrix": {
         "rows": 4,
         "cols": 12
