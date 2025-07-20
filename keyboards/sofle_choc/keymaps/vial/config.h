@@ -15,7 +15,6 @@
  */
 #pragma once
 
-#define RP2040_BOOTLOADER_DOUBLE_TAP_RESET
 // Enabling this option changes the startup behavior to listen for an
 // active USB communication to delegate which part is master and which
 // is slave. With this option enabled and theres’s USB communication,
@@ -35,12 +34,3 @@
 // The four corners
 #define VIAL_UNLOCK_COMBO_ROWS { 0, 5, 3, 8 }
 #define VIAL_UNLOCK_COMBO_COLS { 0, 0, 0, 0 }
-
-
-#define RGBLED_NUM 70
-#define RGBLED_SPLIT {35,35}
-
-#define RGB_MATRIX_FRAMEBUFFER_EFFECTS
-#define RGB_MATRIX_KEYPRESSES
-
-#define BACKLIGHT_BREATHING
