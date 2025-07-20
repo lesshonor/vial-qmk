@@ -16,20 +16,6 @@
             "KC_TRNS",  "KC_LEFT",  "KC_DOWN",  "KC_RGHT",  "KC_PGDN",  "KC_END",   "KC_TRNS",  "KC_VOLD",  "KC_BRID",  "KC_TRNS",  "KC_WH_D",  "KC_TRNS",  "KC_TRNS",  "KC_TRNS",
             "RGB_TOG",  "KC_TRNS",  "RGB_MOD",  "RGB_HUI",  "RGB_SAI",  "RGB_VAI",  "RGB_SPI",  "KC_TRNS",  "KC_MUTE",  "KC_TRNS",  "KC_TRNS",  "KC_TRNS",              "KC_TRNS",  "KC_TRNS",
             "KC_TRNS",  "KC_TRNS",  "KC_TRNS",                                      "KC_TRNS",              "KC_TRNS",  "KC_TRNS",              "KC_TRNS",  "KC_TRNS"
-        ],
-        [
-            "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS",
-            "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS",
-            "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS",
-            "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS",            "KC_TRNS", "KC_TRNS",
-            "KC_TRNS", "KC_TRNS", "KC_TRNS",                                  "KC_TRNS",            "KC_TRNS", "KC_TRNS",            "KC_TRNS", "KC_TRNS"
-        ],
-        [
-            "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS",
-            "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS",
-            "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS",
-            "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS", "KC_TRNS",            "KC_TRNS", "KC_TRNS",
-            "KC_TRNS", "KC_TRNS", "KC_TRNS",                                  "KC_TRNS",            "KC_TRNS", "KC_TRNS",            "KC_TRNS", "KC_TRNS"
         ]
     ],
     "author": "vial-kb",

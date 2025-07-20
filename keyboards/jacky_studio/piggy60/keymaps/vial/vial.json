@@ -1,9 +1,4 @@
 {
-    "name": "Piggy60",
-    "manufacturer": "Jacky",
-    "vendorId": "0xA13B",
-    "productId": "0x1001",
-    "lighting": "qmk_backlight_rgblight",
     "matrix": {
         "rows": 5,
         "cols": 15
